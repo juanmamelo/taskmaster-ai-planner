@@ -1,11 +1,30 @@
 import streamlit as st
-from datetime import datetime
+import requests
 import os
 import json
+from datetime import datetime
 
-from openai import OpenAI
-client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+# Configuración
+st.set_page_config(page_title="TaskMaster IA", page_icon="🧠")
 
+# Función para consultar a Gemini
+def consultar_gemini(prompt_usuario):
+    url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent"
+    headers = {"Content-Type": "application/json"}
+    params = {"key": st.secrets["GEMINI_API_KEY"]}
+    data = {
+        "contents": [{
+            "parts": [{"text": prompt_usuario}]
+        }]
+    }
+
+    response = requests.post(url, headers=headers, params=params, json=data)
+
+    if response.status_code == 200:
+        respuesta = response.json()
+        return respuesta["candidates"][0]["content"]["parts"][0]["text"]
+    else:
+        return f"❌ Error {response.status_code}: {response.text}"
 
 # Función para guardar historial
 def guardar_en_historial(tareas, resultado):
@@ -26,7 +45,7 @@ def guardar_en_historial(tareas, resultado):
 
 # Interfaz principal
 st.title("🧠 TaskMaster IA")
-st.write("Tu asistente inteligente para organizar tareas diarias.")
+st.write("Tu asistente inteligente para organizar tareas diarias con inteligencia artificial.")
 
 st.subheader("📝 Ingresá tus tareas")
 tareas_input = st.text_area("Escribí tus tareas, una por línea")
@@ -40,35 +59,30 @@ if st.button("🔍 Analizar y Priorizar"):
         Lista de tareas:
         {tareas_input}
         """
-        with st.spinner("Analizando tareas..."):
-            response = client.chat.completions.create(
-                model="gpt-3.5-turbo",
-                messages=[{"role": "user", "content": prompt}],
-                temperature=0.7,
-                max_tokens=700
-            )
-            resultado = response.choices[0].message.content
-
+        with st.spinner("Consultando IA..."):
+            resultado = consultar_gemini(prompt)
             guardar_en_historial(tareas_input, resultado)
             st.success("✅ Resultado:")
             st.markdown(resultado)
     else:
-        st.warning("Ingresá al menos una tarea.")
+        st.warning("Por favor, ingresá al menos una tarea.")
 
+# Historial
 with st.expander("🕘 Historial de consultas"):
     if os.path.exists("historial.json"):
         with open("historial.json", "r") as f:
             historial = json.load(f)
-            for item in reversed(historial[-5:]):  # mostrar últimos 5
+            for item in reversed(historial[-5:]):
                 st.write(f"📅 {item['fecha']}")
                 st.markdown(f"**Tareas:**\n{item['tareas']}")
                 st.markdown(f"**Resultado:**\n{item['resultado']}")
                 st.markdown("---")
     else:
-        st.info("Todavía no hay historial.")
+        st.info("Todavía no hay historial guardado.")
 
+# Cómo funciona
 with st.expander("ℹ️ ¿Cómo funciona TaskMaster IA?"):
     st.markdown("""
-    Esta app analiza tus tareas usando inteligencia artificial (GPT-3.5) y te sugiere un orden óptimo de ejecución.
-    También guarda tu historial para que puedas revisar tus últimos análisis.
+    Esta aplicación utiliza inteligencia artificial (modelo Gemini de Google) para analizar tus tareas diarias, priorizarlas y sugerirte horarios ideales. 
+    Solo ingresá tus tareas, hacé clic en *Analizar y Priorizar*, y recibí recomendaciones inteligentes.
     """)
