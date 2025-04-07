@@ -14,4 +14,3 @@ historial.json
 # Archivos de sistema
 .DS_Store
 *.log
-.streamlit/secrets.toml
