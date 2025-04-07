@@ -9,7 +9,7 @@ st.set_page_config(page_title="TaskMaster IA", page_icon="🧠")
 
 # Función para consultar a Gemini
 def consultar_gemini(prompt_usuario):
-    url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent"
+    url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
     headers = {"Content-Type": "application/json"}
     params = {"key": st.secrets["GEMINI_API_KEY"]}
     data = {
