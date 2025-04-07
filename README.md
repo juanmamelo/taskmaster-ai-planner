@@ -5,7 +5,7 @@ Una aplicación web construida con Streamlit que utiliza inteligencia artificial
 ## Funcionalidades
 
 - Ingreso de tareas personalizadas
-- Análisis con IA (GPT-3.5)
+- Análisis con IA (Gemini 2.0 Flash)
 - Recomendaciones de horarios
 - Historial de análisis
 
