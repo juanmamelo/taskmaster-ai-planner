@@ -1,13 +1,12 @@
 import streamlit as st
 import requests
-import os
 import json
+import re
 from datetime import datetime
 
-# Configuración
 st.set_page_config(page_title="TaskMaster IA", page_icon="🧠")
 
-# Función para consultar a Gemini
+# --- Función para consultar a Gemini ---
 def consultar_gemini(prompt_usuario):
     url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
     headers = {"Content-Type": "application/json"}
@@ -17,7 +16,6 @@ def consultar_gemini(prompt_usuario):
             "parts": [{"text": prompt_usuario}]
         }]
     }
-
     response = requests.post(url, headers=headers, params=params, json=data)
 
     if response.status_code == 200:
@@ -26,63 +24,80 @@ def consultar_gemini(prompt_usuario):
     else:
         return f"❌ Error {response.status_code}: {response.text}"
 
-# Función para guardar historial
-def guardar_en_historial(tareas, resultado):
-    historial = {
-        "fecha": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        "tareas": tareas,
-        "resultado": resultado
-    }
-    if not os.path.exists("historial.json"):
-        with open("historial.json", "w") as f:
-            json.dump([historial], f, indent=4)
-    else:
-        with open("historial.json", "r+") as f:
-            data = json.load(f)
-            data.append(historial)
-            f.seek(0)
-            json.dump(data, f, indent=4)
+# --- Inicializar sesión ---
+if "tareas" not in st.session_state:
+    st.session_state.tareas = []
 
-# Interfaz principal
+# --- Agregar nueva tarea ---
 st.title("🧠 TaskMaster IA")
-st.write("Tu asistente inteligente para organizar tareas diarias con inteligencia artificial.")
+st.write("Organizá tu día con inteligencia artificial. Podés ingresar tareas con o sin horario, y la IA completará lo que falta.")
 
-st.subheader("📝 Ingresá tus tareas")
-tareas_input = st.text_area("Escribí tus tareas, una por línea")
+if st.button("➕ Agregar nueva tarea"):
+    st.session_state.tareas.append({"descripcion": "", "inicio": "", "fin": ""})
 
-if st.button("🔍 Analizar y Priorizar"):
-    if tareas_input.strip():
-        prompt = f"""
-        Actuá como un organizador inteligente de tareas. A partir de la siguiente lista, priorizá cada tarea considerando urgencia, importancia y contexto general. 
-        Además, sugerí un horario ideal para realizar cada una.
+# --- Mostrar tareas cargadas dinámicamente ---
+st.subheader("📋 Lista de tareas")
 
-        Lista de tareas:
-        {tareas_input}
-        """
-        with st.spinner("Consultando IA..."):
-            resultado = consultar_gemini(prompt)
-            guardar_en_historial(tareas_input, resultado)
-            st.success("✅ Resultado:")
-            st.markdown(resultado)
+for i, tarea in enumerate(st.session_state.tareas):
+    col1, col2, col3 = st.columns([3, 1.5, 1.5])
+    tarea["descripcion"] = col1.text_input(f"Tarea #{i+1}", tarea["descripcion"], key=f"desc_{i}")
+    tarea["inicio"] = col2.text_input(f"Inicio", tarea["inicio"], key=f"ini_{i}", placeholder="hh:mm")
+    tarea["fin"] = col3.text_input(f"Fin", tarea["fin"], key=f"fin_{i}", placeholder="hh:mm")
+
+# --- Botón de análisis ---
+if st.button("🧠 Organizar cronograma"):
+    tareas_con_horario = []
+    tareas_sin_horario = []
+
+    for t in st.session_state.tareas:
+        if t["descripcion"].strip() == "":
+            continue
+        if t["inicio"].strip() and t["fin"].strip():
+            tareas_con_horario.append(t)
+        else:
+            tareas_sin_horario.append(t)
+
+    prompt_horarios = "Tengo las siguientes tareas con horario definido:\n"
+    for t in tareas_con_horario:
+        prompt_horarios += f"- {t['descripcion']} de {t['inicio']} a {t['fin']}\n"
+
+    if tareas_sin_horario:
+        prompt_horarios += "\nY estas tareas sin horario:\n"
+        for t in tareas_sin_horario:
+            prompt_horarios += f"- {t['descripcion']}\n"
+        prompt_horarios += "\nPor favor, asignales un horario a las tareas sin superponerlas con las ya definidas. Mantené bloques razonables y ordenados."
+
+        resultado_cronograma = consultar_gemini(prompt_horarios)
     else:
-        st.warning("Por favor, ingresá al menos una tarea.")
+        resultado_cronograma = "Todas las tareas tienen horario asignado."
 
-# Historial
-with st.expander("🕘 Historial de consultas"):
-    if os.path.exists("historial.json"):
-        with open("historial.json", "r") as f:
-            historial = json.load(f)
-            for item in reversed(historial[-5:]):
-                st.write(f"📅 {item['fecha']}")
-                st.markdown(f"**Tareas:**\n{item['tareas']}")
-                st.markdown(f"**Resultado:**\n{item['resultado']}")
-                st.markdown("---")
+    # --- Mostrar cronograma final ---
+    st.subheader("🗓️ Cronograma sugerido")
+    st.markdown(resultado_cronograma)
+
+    # --- También pedir análisis y prioridad ---
+    todas_las_tareas = "\n".join([f"- {t['descripcion']}" for t in st.session_state.tareas])
+    prompt_prioridad = f"""
+Actuá como un asistente de productividad. Analizá estas tareas y asignales una prioridad (Alta, Media, Baja) con una breve justificación.
+Tareas:
+{todas_las_tareas}
+"""
+    resultado_prioridad = consultar_gemini(prompt_prioridad)
+
+st.subheader("📌 Análisis y prioridades con colores")
+
+# Buscar líneas con patrón tipo: "- Tarea: Prioridad (explicación)"
+lineas = resultado_prioridad.splitlines()
+
+for linea in lineas:
+    if "Alta" in linea:
+        color = "#FFCCCC"  # rojo claro
+    elif "Media" in linea:
+        color = "#FFF2CC"  # amarillo claro
+    elif "Baja" in linea:
+        color = "#CCFFCC"  # verde claro
     else:
-        st.info("Todavía no hay historial guardado.")
+        color = "#F0F0F0"  # gris claro por defecto
 
-# Cómo funciona
-with st.expander("ℹ️ ¿Cómo funciona TaskMaster IA?"):
-    st.markdown("""
-    Esta aplicación utiliza inteligencia artificial (modelo Gemini de Google) para analizar tus tareas diarias, priorizarlas y sugerirte horarios ideales. 
-    Solo ingresá tus tareas, hacé clic en *Analizar y Priorizar*, y recibí recomendaciones inteligentes.
-    """)
+    st.markdown(f"<div style='background-color: {color}; padding: 10px; border-radius: 8px; margin-bottom: 5px;'>{linea}</div>", unsafe_allow_html=True)
+
