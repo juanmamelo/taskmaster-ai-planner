@@ -1,6 +1,7 @@
 import streamlit as st
 import requests
 import json
+import pandas as pd
 import re
 from datetime import datetime
 
@@ -64,8 +65,12 @@ if st.button("🧠 Organizar cronograma"):
     if tareas_sin_horario:
         prompt_horarios += "\nY estas tareas sin horario:\n"
         for t in tareas_sin_horario:
-            prompt_horarios += f"- {t['descripcion']}\n"
-        prompt_horarios += "\nPor favor, asignales un horario a las tareas sin superponerlas con las ya definidas. Mantené bloques razonables y ordenados."
+            prompt_horarios += """
+            Por favor, asignales un horario a las tareas sin superponerlas con las ya definidas. 
+            Devolvé el resultado solo como una lista con el siguiente formato:
+            - Nombre de la tarea: HH:MM - HH:MM
+            """
+
 
         resultado_cronograma = consultar_gemini(prompt_horarios)
     else:
@@ -73,7 +78,17 @@ if st.button("🧠 Organizar cronograma"):
 
     # --- Mostrar cronograma final ---
     st.subheader("🗓️ Cronograma sugerido")
-    st.markdown(resultado_cronograma)
+
+    # Parsear las líneas tipo: - Tarea: hh:mm - hh:mm
+    patron = r"-\s*(.+?):\s*(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})"
+    eventos = re.findall(patron, resultado_cronograma)
+
+    if eventos:
+        df_cronograma = pd.DataFrame(eventos, columns=["Tarea", "Inicio", "Fin"])
+        df_cronograma = df_cronograma.sort_values("Inicio")
+        st.dataframe(df_cronograma, hide_index=True, use_container_width=True)
+    else:
+        st.markdown(resultado_cronograma)
 
     # --- También pedir análisis y prioridad ---
     todas_las_tareas = "\n".join([f"- {t['descripcion']}" for t in st.session_state.tareas])
