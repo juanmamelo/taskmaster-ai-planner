@@ -1,0 +1,16 @@
+# Entorno virtual
+venv/
+
+# Archivos temporales
+*.pyc
+__pycache__/
+
+# Configuración local de Streamlit
+.streamlit/secrets.toml
+
+# Datos locales (como historial)
+historial.json
+
+# Archivos de sistema
+.DS_Store
+*.log
