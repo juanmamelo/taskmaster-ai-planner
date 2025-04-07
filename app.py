@@ -1,11 +1,11 @@
 import streamlit as st
-import openai
 from datetime import datetime
 import os
 import json
 
-# Cargar API Key de OpenAI
-openai.api_key = st.secrets["OPENAI_API_KEY"]
+from openai import OpenAI
+client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+
 
 # Función para guardar historial
 def guardar_en_historial(tareas, resultado):
@@ -41,13 +41,14 @@ if st.button("🔍 Analizar y Priorizar"):
         {tareas_input}
         """
         with st.spinner("Analizando tareas..."):
-            response = openai.ChatCompletion.create(
+            response = client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.7,
                 max_tokens=700
             )
-            resultado = response.choices[0].message["content"]
+            resultado = response.choices[0].message.content
+
             guardar_en_historial(tareas_input, resultado)
             st.success("✅ Resultado:")
             st.markdown(resultado)
