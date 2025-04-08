@@ -130,24 +130,50 @@ if st.session_state.analisis_ejecutado:
     st.subheader("📌 Análisis y prioridades con colores")
 
     def colorear_bloques_por_tarea(texto):
-        bloques = texto.strip().split("\n\n")
-        for bloque in bloques:
-            bloque_lower = bloque.lower()
-            if "prioridad: alta" in bloque_lower:
-                color = "#FFCCCC"
-            elif "prioridad: media" in bloque_lower:
-                color = "#FFF2CC"
-            elif "prioridad: baja" in bloque_lower:
-                color = "#CCFFCC"
-            else:
-                continue  # ignorar bloques que no contienen tareas válidas
+    bloques = texto.strip().split("\n\n")
+    bloques_procesados = []
 
+    for bloque in bloques:
+        prioridad = "baja"  # por defecto
+        bloque_lower = bloque.lower()
+        if "prioridad: alta" in bloque_lower:
+            prioridad = "alta"
+            color = "#FFCCCC"
+        elif "prioridad: media" in bloque_lower:
+            prioridad = "media"
+            color = "#FFF2CC"
+        elif "prioridad: baja" in bloque_lower:
+            prioridad = "baja"
+            color = "#CCFFCC"
+        else:
+            continue  # ignorar bloques inválidos
+
+        # Mejorar formato visual con saltos de línea
+        bloque = bloque.replace("Prioridad:", "<br><b>Prioridad:</b>")
+        bloque = bloque.replace("Justificación:", "<br><b>Justificación:</b>")
+        bloque = bloque.replace("Tarea:", "<b>Tarea:</b>")
+
+        bloques_procesados.append({
+            "prioridad": prioridad,
+            "color": color,
+            "contenido": bloque
+        })
+
+        # Ordenar: alta > media > baja
+        prioridad_orden = {"alta": 1, "media": 2, "baja": 3}
+        bloques_procesados.sort(key=lambda x: prioridad_orden[x["prioridad"]])
+
+        # Mostrar en pantalla
+        for b in bloques_procesados:
             st.markdown(
-                f"<div style='background-color: {color}; color: black; padding: 10px; border-radius: 8px; margin-bottom: 8px;'>{bloque}</div>",
+                f"<div style='background-color: {b['color']}; color: black; padding: 10px; border-radius: 8px; margin-bottom: 12px;'>{b['contenido']}</div>",
                 unsafe_allow_html=True
             )
+
 
     if st.session_state.resultado_prioridad:
         colorear_bloques_por_tarea(st.session_state.resultado_prioridad)
     else:
         st.info("No se pudo generar el análisis de prioridades.")
+
+    st.markdown("")
