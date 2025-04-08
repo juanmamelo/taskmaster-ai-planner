@@ -95,27 +95,22 @@ if st.button("🧠 Organizar cronograma"):
     # --- También pedir análisis y prioridad ---
     todas_las_tareas = "\n".join([f"- {t['descripcion']}" for t in st.session_state.tareas])
     prompt_prioridad = f"""
-Actuá como un asistente de productividad. Analizá estas tareas y asignales una prioridad (Alta, Media, Baja) con una breve justificación.
-Tareas:
-{todas_las_tareas}
-"""
+    Sos un asistente de productividad. Para cada tarea listada, devolvé una prioridad (Alta, Media o Baja) y una breve justificación. 
+    Formato de salida estricto por tarea:
+
+    Tarea: <nombre>
+    Prioridad: <Alta/Media/Baja>
+    Justificación: <explicación>
+
+    Tareas a analizar:
+    {todas_las_tareas}
+    """
     resultado_prioridad = consultar_gemini(prompt_prioridad)
 
 st.subheader("📌 Análisis y prioridades con colores")
 
 def colorear_bloques_por_tarea(texto):
-    bloques = []
-    bloque_actual = []
-
-    for linea in texto.splitlines():
-        if linea.strip().startswith("* ") or linea.strip() == "":
-            if bloque_actual:
-                bloques.append("\n".join(bloque_actual))
-                bloque_actual = []
-        bloque_actual.append(linea)
-    if bloque_actual:
-        bloques.append("\n".join(bloque_actual))
-
+    bloques = texto.strip().split("\n\n")
     for bloque in bloques:
         bloque_lower = bloque.lower()
         if "prioridad: alta" in bloque_lower:
@@ -125,7 +120,7 @@ def colorear_bloques_por_tarea(texto):
         elif "prioridad: baja" in bloque_lower:
             color = "#CCFFCC"
         else:
-            color = "#F0F0F0"
+            continue  # ignorar bloques que no contienen tareas válidas
 
         st.markdown(
             f"<div style='background-color: {color}; padding: 10px; border-radius: 8px; margin-bottom: 8px;'>{bloque}</div>",
