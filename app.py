@@ -130,34 +130,34 @@ if st.session_state.analisis_ejecutado:
     st.subheader("📌 Análisis y prioridades con colores")
 
     def colorear_bloques_por_tarea(texto):
-    bloques = texto.strip().split("\n\n")
-    bloques_procesados = []
+        bloques = texto.strip().split("\n\n")
+        bloques_procesados = []
 
-    for bloque in bloques:
-        prioridad = "baja"  # por defecto
-        bloque_lower = bloque.lower()
-        if "prioridad: alta" in bloque_lower:
-            prioridad = "alta"
-            color = "#FFCCCC"
-        elif "prioridad: media" in bloque_lower:
-            prioridad = "media"
-            color = "#FFF2CC"
-        elif "prioridad: baja" in bloque_lower:
-            prioridad = "baja"
-            color = "#CCFFCC"
-        else:
-            continue  # ignorar bloques inválidos
+        for bloque in bloques:
+            prioridad = "baja"  # por defecto
+            bloque_lower = bloque.lower()
+            if "prioridad: alta" in bloque_lower:
+                prioridad = "alta"
+                color = "#FFCCCC"
+            elif "prioridad: media" in bloque_lower:
+                prioridad = "media"
+                color = "#FFF2CC"
+            elif "prioridad: baja" in bloque_lower:
+                prioridad = "baja"
+                color = "#CCFFCC"
+            else:
+                continue  # ignorar bloques inválidos
 
-        # Mejorar formato visual con saltos de línea
-        bloque = bloque.replace("Prioridad:", "<br><b>Prioridad:</b>")
-        bloque = bloque.replace("Justificación:", "<br><b>Justificación:</b>")
-        bloque = bloque.replace("Tarea:", "<b>Tarea:</b>")
+            # Mejorar formato visual con saltos de línea
+            bloque = bloque.replace("Tarea:", "<b>Tarea:</b>")
+            bloque = bloque.replace("Prioridad:", "<br><b>Prioridad:</b>")
+            bloque = bloque.replace("Justificación:", "<br><b>Justificación:</b>")
 
-        bloques_procesados.append({
-            "prioridad": prioridad,
-            "color": color,
-            "contenido": bloque
-        })
+            bloques_procesados.append({
+                "prioridad": prioridad,
+                "color": color,
+                "contenido": bloque
+            })
 
         # Ordenar: alta > media > baja
         prioridad_orden = {"alta": 1, "media": 2, "baja": 3}
@@ -169,6 +169,7 @@ if st.session_state.analisis_ejecutado:
                 f"<div style='background-color: {b['color']}; color: black; padding: 10px; border-radius: 8px; margin-bottom: 12px;'>{b['contenido']}</div>",
                 unsafe_allow_html=True
             )
+
 
 
     if st.session_state.resultado_prioridad:
