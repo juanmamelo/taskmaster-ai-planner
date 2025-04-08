@@ -87,12 +87,27 @@ if st.button("🧠 Organizar cronograma"):
     patron = r"-\s*(.+?):\s*(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})"
     eventos = re.findall(patron, resultado_cronograma)
 
+    # Crear DataFrame con tareas cargadas manualmente (con horario)
+    manual_df = pd.DataFrame(tareas_con_horario)
+
+    # Crear DataFrame con tareas sugeridas por la IA
     if eventos:
-        df_cronograma = pd.DataFrame(eventos, columns=["Tarea", "Inicio", "Fin"])
-        df_cronograma = df_cronograma.sort_values("Inicio")
-        st.dataframe(df_cronograma, hide_index=True, use_container_width=True)
+        ai_df = pd.DataFrame(eventos, columns=["descripcion", "inicio", "fin"])
     else:
-        st.markdown(resultado_cronograma)
+        ai_df = pd.DataFrame(columns=["descripcion", "inicio", "fin"])
+
+    # Combinar ambos
+    df_cronograma = pd.concat([manual_df, ai_df], ignore_index=True)
+
+    # Ordenar por horario de inicio
+    df_cronograma = df_cronograma.sort_values("inicio")
+
+    # Renombrar columnas para visualización
+    df_cronograma.columns = ["Tarea", "Inicio", "Fin"]
+
+    # Mostrar tabla
+    st.dataframe(df_cronograma, hide_index=True, use_container_width=True)
+
 
     # --- También pedir análisis y prioridad ---
     todas_las_tareas = "\n".join([f"- {t['descripcion']}" for t in st.session_state.tareas])
