@@ -177,4 +177,4 @@ if st.session_state.analisis_ejecutado:
     else:
         st.info("No se pudo generar el análisis de prioridades.")
 
-    st.markdown("")
+st.markdown("")
