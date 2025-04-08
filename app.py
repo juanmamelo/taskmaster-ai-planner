@@ -5,8 +5,6 @@ import pandas as pd
 import re
 from datetime import datetime
 
-resultado_prioridad = None
-
 st.set_page_config(page_title="TaskMaster IA", page_icon="🧠")
 
 # --- Función para consultar a Gemini ---
@@ -30,6 +28,10 @@ def consultar_gemini(prompt_usuario):
 # --- Inicializar sesión ---
 if "tareas" not in st.session_state:
     st.session_state.tareas = []
+if "analisis_ejecutado" not in st.session_state:
+    st.session_state.analisis_ejecutado = False
+if "resultado_prioridad" not in st.session_state:
+    st.session_state.resultado_prioridad = None
 
 # --- Agregar nueva tarea ---
 st.title("🧠 TaskMaster IA")
@@ -67,12 +69,12 @@ if st.button("🧠 Organizar cronograma"):
     if tareas_sin_horario:
         prompt_horarios += "\nY estas tareas sin horario:\n"
         for t in tareas_sin_horario:
-            prompt_horarios += """
-            Por favor, asignales un horario a las tareas sin superponerlas con las ya definidas. 
-            Devolvé el resultado solo como una lista con el siguiente formato:
-            - Nombre de la tarea: HH:MM - HH:MM
-            """
-
+            prompt_horarios += f"- {t['descripcion']}\n"
+        prompt_horarios += """
+        Por favor, asignales un horario a las tareas sin superponerlas con las ya definidas. 
+        Devolvé el resultado solo como una lista con el siguiente formato:
+        - Nombre de la tarea: HH:MM - HH:MM
+        """
 
         resultado_cronograma = consultar_gemini(prompt_horarios)
     else:
@@ -105,31 +107,32 @@ if st.button("🧠 Organizar cronograma"):
     Tareas a analizar:
     {todas_las_tareas}
     """
-    resultado_prioridad = consultar_gemini(prompt_prioridad)
+    st.session_state.resultado_prioridad = consultar_gemini(prompt_prioridad)
+    st.session_state.analisis_ejecutado = True
 
-st.subheader("📌 Análisis y prioridades con colores")
+# --- Mostrar prioridades coloreadas SOLO si se ejecutó el análisis ---
+if st.session_state.analisis_ejecutado:
+    st.subheader("📌 Análisis y prioridades con colores")
 
-def colorear_bloques_por_tarea(texto):
-    bloques = texto.strip().split("\n\n")
-    for bloque in bloques:
-        bloque_lower = bloque.lower()
-        if "prioridad: alta" in bloque_lower:
-            color = "#FFCCCC"
-        elif "prioridad: media" in bloque_lower:
-            color = "#FFF2CC"
-        elif "prioridad: baja" in bloque_lower:
-            color = "#CCFFCC"
-        else:
-            continue  # ignorar bloques que no contienen tareas válidas
+    def colorear_bloques_por_tarea(texto):
+        bloques = texto.strip().split("\n\n")
+        for bloque in bloques:
+            bloque_lower = bloque.lower()
+            if "prioridad: alta" in bloque_lower:
+                color = "#FFCCCC"
+            elif "prioridad: media" in bloque_lower:
+                color = "#FFF2CC"
+            elif "prioridad: baja" in bloque_lower:
+                color = "#CCFFCC"
+            else:
+                continue  # ignorar bloques que no contienen tareas válidas
 
-        st.markdown(
-            f"<div style='background-color: {color}; color: black; padding: 10px; border-radius: 8px; margin-bottom: 8px;'>{bloque}</div>",
-            unsafe_allow_html=True
-        )
+            st.markdown(
+                f"<div style='background-color: {color}; color: black; padding: 10px; border-radius: 8px; margin-bottom: 8px;'>{bloque}</div>",
+                unsafe_allow_html=True
+            )
 
-# Buscar líneas con patrón tipo: "- Tarea: Prioridad (explicación)"
-if resultado_prioridad:
-    colorear_bloques_por_tarea(resultado_prioridad)
-else:
-    st.info("No se pudo generar el análisis de prioridades.")
-
+    if st.session_state.resultado_prioridad:
+        colorear_bloques_por_tarea(st.session_state.resultado_prioridad)
+    else:
+        st.info("No se pudo generar el análisis de prioridades.")
