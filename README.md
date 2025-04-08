@@ -1,23 +1,30 @@
 # 🧠 TaskMaster IA
 
-Una aplicación web construida con Streamlit que utiliza inteligencia artificial para organizar y priorizar tus tareas.
+**TaskMaster IA** es una aplicación web interactiva que utiliza inteligencia artificial (Gemini de Google) para ayudarte a organizar tus tareas diarias, priorizarlas y acomodarlas en un cronograma inteligente.
 
-## Funcionalidades
+---
 
-- Ingreso de tareas personalizadas
-- Análisis con IA (Gemini 2.0 Flash)
-- Recomendaciones de horarios
-- Historial de análisis
+## 🚀 ¿Qué hace?
 
-## Uso
+- 📋 Te permite ingresar tareas con o sin horarios asignados
+- ⏰ Propone horarios inteligentes sin superposición usando IA
+- 📌 Asigna prioridades (Alta, Media, Baja) con justificación
+- 📊 Muestra todo en una tabla organizada por hora
+- 🎨 Visualiza las prioridades con colores
 
-1. Ingresá tus tareas
-2. Hacé clic en "Analizar y Priorizar"
-3. Consultá tus resultados y revisá el historial
+---
+
+## 📸 Captura de pantalla
+
+![image](https://github.com/user-attachments/assets/e3ec5402-601b-4a91-ad60-871f73415876)
+
+---
 
 ## Despliegue
 
 La aplicación está desplegada en Streamlit Cloud.
+
+---
 
 ## Autor
 
