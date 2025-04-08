@@ -5,6 +5,8 @@ import pandas as pd
 import re
 from datetime import datetime
 
+resultado_prioridad = None
+
 st.set_page_config(page_title="TaskMaster IA", page_icon="🧠")
 
 # --- Función para consultar a Gemini ---
@@ -101,18 +103,38 @@ Tareas:
 
 st.subheader("📌 Análisis y prioridades con colores")
 
+def colorear_bloques_por_tarea(texto):
+    bloques = []
+    bloque_actual = []
+
+    for linea in texto.splitlines():
+        if linea.strip().startswith("* ") or linea.strip() == "":
+            if bloque_actual:
+                bloques.append("\n".join(bloque_actual))
+                bloque_actual = []
+        bloque_actual.append(linea)
+    if bloque_actual:
+        bloques.append("\n".join(bloque_actual))
+
+    for bloque in bloques:
+        bloque_lower = bloque.lower()
+        if "prioridad: alta" in bloque_lower:
+            color = "#FFCCCC"
+        elif "prioridad: media" in bloque_lower:
+            color = "#FFF2CC"
+        elif "prioridad: baja" in bloque_lower:
+            color = "#CCFFCC"
+        else:
+            color = "#F0F0F0"
+
+        st.markdown(
+            f"<div style='background-color: {color}; padding: 10px; border-radius: 8px; margin-bottom: 8px;'>{bloque}</div>",
+            unsafe_allow_html=True
+        )
+
 # Buscar líneas con patrón tipo: "- Tarea: Prioridad (explicación)"
-lineas = resultado_prioridad.splitlines()
-
-for linea in lineas:
-    if "Alta" in linea:
-        color = "#FFCCCC"  # rojo claro
-    elif "Media" in linea:
-        color = "#FFF2CC"  # amarillo claro
-    elif "Baja" in linea:
-        color = "#CCFFCC"  # verde claro
-    else:
-        color = "#F0F0F0"  # gris claro por defecto
-
-    st.markdown(f"<div style='background-color: {color}; padding: 10px; border-radius: 8px; margin-bottom: 5px;'>{linea}</div>", unsafe_allow_html=True)
+if resultado_prioridad:
+    colorear_bloques_por_tarea(resultado_prioridad)
+else:
+    st.info("No se pudo generar el análisis de prioridades.")
 
