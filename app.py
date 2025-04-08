@@ -123,7 +123,7 @@ def colorear_bloques_por_tarea(texto):
             continue  # ignorar bloques que no contienen tareas válidas
 
         st.markdown(
-            f"<div style='background-color: {color}; padding: 10px; border-radius: 8px; margin-bottom: 8px;'>{bloque}</div>",
+            f"<div style='background-color: {color}; color: black; padding: 10px; border-radius: 8px; margin-bottom: 8px;'>{bloque}</div>",
             unsafe_allow_html=True
         )
 
