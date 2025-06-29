@@ -26,6 +26,15 @@ La aplicación está desplegada en Streamlit Cloud.
 
 ---
 
-## Autor
+## 🧑‍💻 Autor
 
-Juan Manuel Melo – Comisión 71910
+Juan Manuel Melo  
+🔗 [LinkedIn](https://www.linkedin.com/in/juan-manuel-melo95/)  
+📧 juanmanuelmelo95@gmail.com
+
+---
+
+## 📥 Licencia
+
+Este proyecto está bajo la licencia MIT. Ver el archivo `LICENSE` para más detalles.
+
